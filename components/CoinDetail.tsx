@@ -9,12 +9,6 @@ interface CoinDetailProps {
   onBack: () => void;
 }
 
-declare global {
-  interface Window {
-    TradingView: any;
-  }
-}
-
 // DCA Simulation Types
 interface DCASimulationPoint {
   period: number;
@@ -45,19 +39,12 @@ export const CoinDetail: React.FC<CoinDetailProps> = ({ coin, onBack }) => {
   const [dcaData, setDcaData] = useState<DCASimulationPoint[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // TradingView Widget Logic - Explicitly depends on activeTab being 'chart'
+  // TradingView Widget Logic
   useEffect(() => {
-    // Clean up any existing script or iframe if tab is not chart
-    if (activeTab !== 'chart') {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
-      return;
-    }
-
     // Only mount if activeTab is chart
     if (activeTab === 'chart' && containerRef.current) {
       containerRef.current.innerHTML = ''; // Ensure empty before mounting
+      
       const script = document.createElement('script');
       script.src = "https://s3.tradingview.com/tv.js";
       script.async = true;

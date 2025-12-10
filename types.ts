@@ -1,3 +1,4 @@
+
 export enum ViewState {
   LANDING = 'LANDING',
   LOGIN = 'LOGIN',
@@ -9,6 +10,14 @@ export enum ViewState {
   ALERTS = 'ALERTS',
   SETTINGS = 'SETTINGS',
   AUTO_TRADE = 'AUTO_TRADE'
+}
+
+declare global {
+  interface Window {
+    ethereum?: any;
+    solana?: any;
+    TradingView?: any;
+  }
 }
 
 export interface CoinData {

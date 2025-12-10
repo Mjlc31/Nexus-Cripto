@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { PortfolioPosition } from '../types';
-import { Wallet, Plus, RefreshCw, ShieldCheck, BrainCircuit, X, DollarSign, ArrowUpRight, ArrowDownRight, PieChart, Trash2, Link as LinkIcon, Globe, Zap, Smartphone, Layers } from 'lucide-react';
+import { Wallet, Plus, RefreshCw, ShieldCheck, BrainCircuit, X, DollarSign, ArrowUpRight, ArrowDownRight, PieChart, Trash2, Link as LinkIcon, Globe, Zap, Smartphone, Layers, AlertCircle } from 'lucide-react';
 import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip as ReTooltip } from 'recharts';
 import { analyzePortfolio } from '../services/geminiService';
 import { storageService } from '../services/storageService';
+import { walletService } from '../services/walletService';
 
 const COLORS = ['#0A84FF', '#30D158', '#FFD60A', '#FF453A', '#BF5AF2', '#5E5CE6'];
 
@@ -17,6 +18,9 @@ export const Portfolio: React.FC = () => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [newAsset, setNewAsset] = useState({ symbol: '', amount: '', price: '' });
+  
+  // Feedback simples
+  const [toast, setToast] = useState<{msg: string, type: 'error' | 'success'} | null>(null);
 
   useEffect(() => {
     const loadedPositions = storageService.getPortfolio();
@@ -26,44 +30,52 @@ export const Portfolio: React.FC = () => {
     }
   }, []);
 
-  const handleWalletConnect = (providerName: string) => {
-    setShowWalletModal(false);
-    
-    // Se já estiver na tela principal, apenas simula um refresh
-    if (isConnected) {
-        setIsConnecting(true); // Reusa estado para loading overlay se quiser, ou cria um local
-        // Hack rápido para demo: usar um toast ou loading local seria melhor, mas aqui vamos simular
-        const originalText = connectStep;
-        setConnectStep(`Sincronizando com ${providerName}...`);
-        
-        // Simplesmente adiciona um delay para simular a conexão
-        setTimeout(() => {
-            setConnectStep('');
-            setIsConnecting(false);
-            alert(`${providerName} conectada com sucesso! Saldos atualizados.`);
-        }, 1500);
-        return;
-    }
-
-    // Fluxo inicial de conexão (tela vazia)
-    connectWallet(providerName);
+  const showToast = (msg: string, type: 'error' | 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  const connectWallet = (providerName = 'Carteira') => {
+  const handleWalletConnect = async (providerName: string) => {
+    setShowWalletModal(false);
     setIsConnecting(true);
-    setConnectStep('Iniciando handshake seguro...');
-    setTimeout(() => {
-      setConnectStep(`Solicitando assinatura em ${providerName}...`);
-      setTimeout(() => {
-        setConnectStep('Sincronizando saldos on-chain...');
-        setTimeout(() => {
-          const current = storageService.getPortfolio();
-          setPositions(current);
-          setIsConnected(true);
-          setIsConnecting(false);
-        }, 1500);
-      }, 1500);
-    }, 1000);
+    setConnectStep(`Conectando a ${providerName}...`);
+
+    let result;
+
+    try {
+        if (providerName === 'MetaMask') {
+            result = await walletService.connectEVM();
+        } else if (providerName === 'Phantom') {
+            result = await walletService.connectSolana();
+        } else {
+            // Fallback para simuladores ou Solflare se não implementado
+            setConnectStep('Simulando conexão...');
+            setTimeout(() => {
+                setIsConnecting(false);
+                showToast(`${providerName} ainda não suportada nativamente nesta demo.`, 'error');
+            }, 1000);
+            return;
+        }
+
+        if (result.success && result.assets) {
+            setConnectStep('Sincronizando saldos...');
+            
+            // Mescla os novos ativos com o portfólio atual
+            const updatedPositions = walletService.mergePositions(positions, result.assets, providerName);
+            
+            setPositions(updatedPositions);
+            storageService.savePortfolio(updatedPositions);
+            setIsConnected(true);
+            showToast(`${providerName} conectada! Saldo: ${result.assets[0].amount.toFixed(4)} ${result.assets[0].symbol}`, 'success');
+        } else {
+            showToast(result.error || 'Erro desconhecido', 'error');
+        }
+    } catch (e) {
+        showToast('Falha na conexão', 'error');
+    } finally {
+        setIsConnecting(false);
+        setConnectStep('');
+    }
   };
 
   const handleAddAsset = (e: React.FormEvent) => {
@@ -109,12 +121,30 @@ export const Portfolio: React.FC = () => {
     setIsAnalyzing(false);
   };
 
+  const clearPortfolio = () => {
+      if(confirm('Tem certeza? Isso apagará todos os dados locais.')) {
+          storageService.savePortfolio([]);
+          setPositions([]);
+          setIsConnected(false);
+          window.location.reload();
+      }
+  };
+
   const totalValue = positions.reduce((acc, curr) => acc + curr.valueUsd, 0);
   const totalPnL = positions.reduce((acc, curr) => acc + curr.pnlUsd, 0);
 
   if (!isConnected && positions.length === 0) {
     return (
-      <div className="pt-32 px-6 max-w-4xl mx-auto min-h-screen flex flex-col items-center text-center">
+      <div className="pt-32 px-6 max-w-4xl mx-auto min-h-screen flex flex-col items-center text-center relative">
+        {toast && (
+            <div className={`fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full backdrop-blur-md border shadow-2xl z-50 animate-in slide-in-from-top-5 ${toast.type === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-200' : 'bg-green-500/20 border-green-500/30 text-green-200'}`}>
+                <div className="flex items-center gap-2 text-sm font-bold">
+                    {toast.type === 'error' ? <AlertCircle className="w-4 h-4"/> : <Zap className="w-4 h-4"/>}
+                    {toast.msg}
+                </div>
+            </div>
+        )}
+
         <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-8 backdrop-blur-md">
           <Wallet className="w-8 h-8 text-white" />
         </div>
@@ -133,7 +163,7 @@ export const Portfolio: React.FC = () => {
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button 
               onClick={() => setShowWalletModal(true)}
-              className="w-full bg-white text-black hover:bg-gray-200 py-4 rounded-full font-bold transition-all"
+              className="w-full bg-white text-black hover:bg-gray-200 py-4 rounded-full font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               Conectar Carteira
             </button>
@@ -163,19 +193,33 @@ export const Portfolio: React.FC = () => {
                 </div>
             </div>
         )}
-        
-        {/* Modal Logic Included Below */}
       </div>
     );
   }
 
   return (
-    <div className="pt-28 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen pb-20">
+    <div className="pt-28 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen pb-20 relative">
       
+      {/* Toast Feedback */}
+      {toast && (
+        <div className={`fixed top-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full backdrop-blur-md border shadow-2xl z-50 animate-in slide-in-from-top-5 ${toast.type === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-200' : 'bg-green-500/20 border-green-500/30 text-green-200'}`}>
+            <div className="flex items-center gap-2 text-sm font-bold">
+                {toast.type === 'error' ? <AlertCircle className="w-4 h-4"/> : <Zap className="w-4 h-4"/>}
+                {toast.msg}
+            </div>
+        </div>
+      )}
+
       {/* Header Summary */}
-      <div className="glass-panel p-8 rounded-3xl mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="glass-panel p-8 rounded-3xl mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+            <PieChart className="w-40 h-40" />
+        </div>
         <div>
-          <div className="text-nexus-muted text-xs font-bold uppercase tracking-widest mb-1">Total Balance</div>
+          <div className="text-nexus-muted text-xs font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
+            Total Balance
+            <button onClick={clearPortfolio} className="hover:text-red-400 transition-colors" title="Reset Portfolio"><Trash2 className="w-3 h-3" /></button>
+          </div>
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-5xl md:text-6xl font-bold text-white font-mono tracking-tighter">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             <span className={`px-3 py-1 rounded-full text-sm font-bold backdrop-blur-md border border-white/5 ${totalPnL >= 0 ? 'bg-nexus-success/10 text-nexus-success' : 'bg-nexus-danger/10 text-nexus-danger'}`}>
@@ -184,13 +228,13 @@ export const Portfolio: React.FC = () => {
           </div>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 relative z-10">
           <button 
              onClick={() => setShowWalletModal(true)}
              className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full font-bold transition-all flex items-center gap-2 group"
           >
              <LinkIcon className="w-4 h-4 text-nexus-muted group-hover:text-white transition-colors" />
-             <span className="hidden md:inline text-sm">Conectar</span>
+             <span className="hidden md:inline text-sm">Sincronizar</span>
           </button>
 
           <button onClick={() => setShowAddModal(true)} className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors">
@@ -199,7 +243,7 @@ export const Portfolio: React.FC = () => {
           <button 
             onClick={runPortfolioAnalysis}
             disabled={isAnalyzing}
-            className="px-6 py-3 bg-nexus-accent hover:bg-blue-600 text-white rounded-full font-bold transition-all flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-3 bg-nexus-accent hover:bg-blue-600 text-white rounded-full font-bold transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-nexus-accent/20"
           >
             {isAnalyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
             <span className="hidden md:inline">Análise IA</span>
@@ -209,54 +253,63 @@ export const Portfolio: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Asset List */}
-        <div className="lg:col-span-2 glass-panel rounded-3xl overflow-hidden">
+        <div className="lg:col-span-2 glass-panel rounded-3xl overflow-hidden min-h-[400px]">
             <div className="p-6 border-b border-white/5 flex justify-between items-center">
               <h3 className="font-bold text-white">Ativos</h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-white/[0.02] text-xs uppercase text-nexus-muted font-medium">
-                  <tr>
-                    <th className="px-6 py-4 text-left">Ativo</th>
-                    <th className="px-6 py-4 text-right">Saldo</th>
-                    <th className="px-6 py-4 text-right">Preço Méd.</th>
-                    <th className="px-6 py-4 text-right">Valor</th>
-                    <th className="px-6 py-4 text-right">P&L</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {positions.map((pos) => (
-                    <tr key={pos.id} className="hover:bg-white/[0.02] transition-colors group cursor-default">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-sm font-bold text-white">
-                            {pos.symbol[0]}
-                          </div>
-                          <div>
-                            <div className="text-white font-medium">{pos.name}</div>
-                            <div className="text-xs text-nexus-muted flex items-center gap-1">{pos.source}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-right text-nexus-muted font-mono text-sm">
-                        {pos.amount.toLocaleString()} <span className="text-[10px]">{pos.symbol}</span>
-                      </td>
-                      <td className="px-6 py-5 text-right text-nexus-muted font-mono text-sm">
-                        ${pos.avgBuyPrice.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-5 text-right text-white font-mono font-medium">
-                        ${pos.valueUsd.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <span className={`font-mono text-sm ${pos.pnlPercent >= 0 ? 'text-nexus-success' : 'text-nexus-danger'}`}>
-                          {pos.pnlPercent >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%
-                        </span>
-                      </td>
+            {positions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-nexus-muted">
+                    <p>Nenhum ativo encontrado.</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                <table className="w-full">
+                    <thead className="bg-white/[0.02] text-xs uppercase text-nexus-muted font-medium">
+                    <tr>
+                        <th className="px-6 py-4 text-left">Ativo</th>
+                        <th className="px-6 py-4 text-right">Saldo</th>
+                        <th className="px-6 py-4 text-right">Preço Méd.</th>
+                        <th className="px-6 py-4 text-right">Valor</th>
+                        <th className="px-6 py-4 text-right">P&L</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                    {positions.map((pos) => (
+                        <tr key={pos.id} className="hover:bg-white/[0.02] transition-colors group cursor-default">
+                        <td className="px-6 py-5">
+                            <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-sm font-bold text-white border border-white/5">
+                                {pos.symbol[0]}
+                            </div>
+                            <div>
+                                <div className="text-white font-medium">{pos.name}</div>
+                                <div className="text-xs text-nexus-muted flex items-center gap-1">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${pos.source === 'WALLET' ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+                                    {pos.source === 'WALLET' ? 'On-Chain' : 'Manual'}
+                                </div>
+                            </div>
+                            </div>
+                        </td>
+                        <td className="px-6 py-5 text-right text-nexus-muted font-mono text-sm">
+                            {pos.amount.toLocaleString(undefined, {maximumFractionDigits: 6})} <span className="text-[10px]">{pos.symbol}</span>
+                        </td>
+                        <td className="px-6 py-5 text-right text-nexus-muted font-mono text-sm">
+                            ${pos.avgBuyPrice.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                        </td>
+                        <td className="px-6 py-5 text-right text-white font-mono font-medium">
+                            ${pos.valueUsd.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                            <span className={`font-mono text-sm ${pos.pnlPercent >= 0 ? 'text-nexus-success' : 'text-nexus-danger'}`}>
+                            {pos.pnlPercent >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%
+                            </span>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                </div>
+            )}
         </div>
 
         {/* Right Column */}
