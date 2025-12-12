@@ -1,6 +1,7 @@
 import React from 'react';
 import { ViewState } from '../types';
-import { ChevronRight, Zap, Target, Lock, Activity, TrendingDown } from 'lucide-react';
+import { Zap, Lock } from 'lucide-react';
+import { MatrixRain } from './MatrixRain';
 
 interface HeroProps {
   setView: (view: ViewState) => void;
@@ -10,27 +11,34 @@ export const Hero: React.FC<HeroProps> = ({ setView }) => {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-nexus-bg">
       
-      {/* Background Ambience - The "Green Candle" glow */}
-      <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-nexus-primary/10 rounded-full blur-[150px] pointer-events-none opacity-60 animate-pulse-fast"></div>
+      {/* 1. Matrix Rain Layer */}
+      <MatrixRain />
 
+      {/* 2. Gradient Overlay (To fade the rain at edges and ensure text readability) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-nexus-bg via-nexus-bg/50 to-nexus-bg/80 z-0 pointer-events-none"></div>
+      
+      {/* 3. Ambient Glow */}
+      <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-nexus-primary/10 rounded-full blur-[150px] pointer-events-none opacity-60 animate-pulse-fast z-0"></div>
+
+      {/* 4. Content Layer */}
       <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
         
         {/* Status Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded bg-nexus-primary/10 border border-nexus-primary/20 cursor-default animate-in fade-in slide-in-from-top-4 duration-1000">
+        <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded bg-black/60 border border-nexus-primary/20 backdrop-blur-md cursor-default animate-in fade-in slide-in-from-top-4 duration-1000 shadow-[0_0_15px_rgba(0,255,148,0.1)]">
           <span className="w-2 h-2 rounded-full bg-nexus-primary animate-pulse"></span>
           <span className="text-[10px] font-mono font-bold text-nexus-primary uppercase tracking-widest">Setup Institucional: Online</span>
         </div>
         
         {/* Headline - Visceral & Direct */}
-        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tighter text-white mb-6 leading-[0.9] animate-in zoom-in duration-700">
+        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tighter text-white mb-6 leading-[0.9] animate-in zoom-in duration-700 drop-shadow-2xl">
           PARE DE SER A<br/>
           <span className="text-nexus-muted line-through decoration-nexus-danger decoration-4 opacity-50">LIQUIDEZ.</span> 
           <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-nexus-primary to-emerald-300 text-glow">VIRE A BALEIA.</span>
         </h1>
         
         {/* Subtitle - The User's Strategy as the Hero */}
-        <p className="text-lg md:text-2xl text-nexus-muted font-medium max-w-3xl mx-auto leading-relaxed mb-10 text-balance animate-in fade-in delay-200">
-          O varejo opera notícias. Você opera a <span className="text-white border-b border-nexus-primary/50">Média de 8 Semanas</span> e o <span className="text-white border-b border-nexus-primary/50">Stock-to-Flow</span>.
+        <p className="text-lg md:text-2xl text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed mb-10 text-balance animate-in fade-in delay-200 drop-shadow-md">
+          O varejo opera notícias. Você opera a <span className="text-white border-b border-nexus-primary/50 font-bold">Média de 8 Semanas</span> e o <span className="text-white border-b border-nexus-primary/50 font-bold">Stock-to-Flow</span>.
           <br/>A única ferramenta desenhada para proteger seu capital e multiplicar seu patrimônio.
         </p>
 
@@ -48,14 +56,14 @@ export const Hero: React.FC<HeroProps> = ({ setView }) => {
           
           <button 
             onClick={() => setView(ViewState.LOGIN)}
-            className="w-full sm:w-auto px-8 py-5 rounded border border-white/10 font-bold text-lg text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-5 rounded border border-white/10 font-bold text-lg text-white hover:bg-white/5 backdrop-blur-sm transition-all flex items-center justify-center gap-2"
           >
             <Lock className="w-4 h-4 text-nexus-muted" /> Login
           </button>
         </div>
 
         {/* Social Proof / Stats - The "Hook" */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-8 animate-in fade-in delay-500">
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-8 animate-in fade-in delay-500 bg-black/20 backdrop-blur-sm rounded-xl">
            <StatBox label="Precisão (Backtest)" value="89.4%" sub="Modelo S2F + Fibbo" />
            <StatBox label="Sinais Hoje" value="12" sub="Acima da SMA 8W" color="text-nexus-primary" />
            <StatBox label="Capital Protegido" value="$42M+" sub="Via Gestão de Risco" />

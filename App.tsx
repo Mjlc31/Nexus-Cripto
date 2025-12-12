@@ -41,6 +41,11 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    setIsSubscribed(false);
+    setView(ViewState.LANDING);
+  };
+
   // Subscription Handler Mock
   const handleSubscribe = () => {
     setIsSubscribed(true);
@@ -52,13 +57,13 @@ export default function App() {
       
       <Navbar view={view} setView={setView} isSubscribed={isSubscribed} />
 
-      <main>
+      <main className="animate-in fade-in duration-500">
         {view === ViewState.LANDING && (
           <>
             <Hero setView={setView} />
             <Pricing onSubscribe={() => setView(ViewState.REGISTER)} />
-            <footer className="py-8 text-center text-nexus-muted text-sm border-t border-nexus-border mt-12">
-              <p>© 2024 Nexus Pro Analytics. Todas as estratégias simuladas para demonstração.</p>
+            <footer className="py-8 text-center text-nexus-muted text-sm border-t border-nexus-border mt-12 bg-black">
+              <p>© 2025 Nexus Pro Analytics. Powered by Gemini AI. Trading envolve riscos.</p>
             </footer>
           </>
         )}
@@ -103,7 +108,7 @@ export default function App() {
             )}
 
             {view === ViewState.SETTINGS && (
-              <Settings />
+              <Settings onLogout={handleLogout} />
             )}
 
             {view === ViewState.DETAIL && selectedCoin && (
