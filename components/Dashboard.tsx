@@ -144,6 +144,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
   // Calculate Confluence Score
   const confluenceScore = (sma8wCheck ? 33 : 0) + (s2fCheck ? 33 : 0) + (fibboCheck ? 34 : 0);
 
+  // Safe Accessor for Fear Greed
+  const fearGreed = globalMetrics?.fearGreedIndex ?? 50;
+
   return (
     <div className="pt-32 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen pb-20 animate-fade-in">
       
@@ -237,15 +240,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
                      <Gauge className="w-4 h-4 text-nexus-muted" />
                   </div>
                   <div className="flex items-end gap-2">
-                     <span className={`text-3xl font-mono font-bold ${globalMetrics?.fearGreedIndex > 50 ? 'text-nexus-primary' : 'text-nexus-danger'}`}>
-                        {globalMetrics?.fearGreedIndex || 50}
+                     <span className={`text-3xl font-mono font-bold ${fearGreed > 50 ? 'text-nexus-primary' : 'text-nexus-danger'}`}>
+                        {fearGreed}
                      </span>
                      <span className="text-xs font-bold text-nexus-muted mb-1.5 uppercase">
-                        {globalMetrics?.fearGreedIndex > 75 ? 'Euforia' : globalMetrics?.fearGreedIndex < 25 ? 'Pânico' : 'Neutro'}
+                        {fearGreed > 75 ? 'Euforia' : fearGreed < 25 ? 'Pânico' : 'Neutro'}
                      </span>
                   </div>
                   <div className="w-full bg-white/5 h-1 mt-3">
-                     <div className={`h-full ${globalMetrics?.fearGreedIndex > 50 ? 'bg-nexus-primary' : 'bg-nexus-danger'}`} style={{width: `${globalMetrics?.fearGreedIndex}%`}}></div>
+                     <div className={`h-full ${fearGreed > 50 ? 'bg-nexus-primary' : 'bg-nexus-danger'}`} style={{width: `${fearGreed}%`}}></div>
                   </div>
                </div>
             </div>

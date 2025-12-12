@@ -1,6 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { CoinData, PortfolioPosition } from "../types";
 
+// Declare process for TS compatibility in Vite environment
+declare const process: {
+  env: {
+    API_KEY?: string;
+  };
+};
+
 // Safe initialization that won't crash the entire app if env is missing
 const getAiClient = () => {
   try {

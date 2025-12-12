@@ -117,7 +117,8 @@ export const Portfolio: React.FC = () => {
     if (positions.length === 0) return;
     setIsAnalyzing(true);
     const analysis = await analyzePortfolio(positions);
-    setAiAnalysis(analysis);
+    // Explicitly handle undefined to satisfy TS strict null checks
+    setAiAnalysis(analysis ?? null);
     setIsAnalyzing(false);
   };
 
