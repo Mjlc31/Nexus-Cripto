@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState } from '../types';
-import { ArrowLeft, LineChart } from 'lucide-react';
+import { ArrowLeft, LineChart, Lock } from 'lucide-react';
 
 interface AuthProps {
   view: ViewState;
@@ -27,14 +27,14 @@ export const Auth: React.FC<AuthProps> = ({ view, setView }) => {
         <ArrowLeft className="w-4 h-4" /> Voltar
       </button>
 
-      <div className="w-full max-w-md glass-panel p-10 rounded-3xl shadow-2xl relative z-10 animate-fade-in-up">
+      <div className="w-full max-w-md glass-panel p-10 rounded-3xl shadow-2xl relative z-10 animate-fade-in-up border border-white/10">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-white/20">
-             <LineChart className="w-6 h-6 text-black" />
+             <Lock className="w-6 h-6 text-black" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{isRegister ? 'Nova Conta' : 'Acesso'}</h2>
+          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">{isRegister ? 'Solicitar Acesso' : 'Terminal Nexus'}</h2>
           <p className="text-nexus-muted text-sm font-light">
-            {isRegister ? 'Junte-se à elite da análise on-chain.' : 'Bem-vindo de volta ao Nexus.'}
+            {isRegister ? 'Apenas 50 vagas restantes para o ciclo atual.' : 'Identifique-se para acessar os dados institucionais.'}
           </p>
         </div>
 
@@ -43,7 +43,7 @@ export const Auth: React.FC<AuthProps> = ({ view, setView }) => {
             <div>
               <input 
                 type="text" 
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20 font-medium"
                 placeholder="Nome Completo"
               />
             </div>
@@ -52,24 +52,24 @@ export const Auth: React.FC<AuthProps> = ({ view, setView }) => {
             <input 
               type="email" 
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20"
-              placeholder="Email"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20 font-medium"
+              placeholder="Email Corporativo (Opcional)"
             />
           </div>
           <div>
             <input 
               type="password" 
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20"
-              placeholder="Senha"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-white/30 transition-colors placeholder-white/20 font-medium"
+              placeholder="Senha Mestra"
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-white text-black hover:bg-gray-200 font-bold py-4 rounded-xl transition-all mt-4 shadow-lg"
+            className="w-full bg-white text-black hover:bg-gray-200 font-bold py-4 rounded-xl transition-all mt-4 shadow-lg flex items-center justify-center gap-2"
           >
-            {isRegister ? 'Criar Conta' : 'Entrar'}
+            {isRegister ? 'Garantir Minha Vaga' : 'Entrar no Sistema'}
           </button>
         </form>
 
@@ -78,7 +78,7 @@ export const Auth: React.FC<AuthProps> = ({ view, setView }) => {
             onClick={() => setView(isRegister ? ViewState.LOGIN : ViewState.REGISTER)}
             className="hover:text-white transition-colors"
           >
-            {isRegister ? 'Já possui conta? Entrar' : "Não tem conta? Cadastre-se"}
+            {isRegister ? 'Já é um membro? Login' : "Ainda não tem acesso? Aplicar agora"}
           </button>
         </div>
       </div>

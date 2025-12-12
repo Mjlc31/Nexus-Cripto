@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, LogOut, LineChart, Wallet, Bell, Settings, Bot, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, LogOut, LineChart, Wallet, Bell, Settings, Bot } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface NavbarProps {
@@ -9,95 +9,87 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ view, setView, isSubscribed }) => {
-  // Only show full nav if logged in AND subscribed
   const showFullNav = isSubscribed && (view !== ViewState.LANDING && view !== ViewState.LOGIN && view !== ViewState.REGISTER && view !== ViewState.PRICING);
 
   return (
-    <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <nav className="pointer-events-auto bg-black/60 backdrop-blur-2xl border border-white/10 rounded-full shadow-2xl transition-all duration-500 max-w-5xl w-full flex items-center justify-between px-2 py-2 sm:px-3">
+    <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+      <nav className={`
+        pointer-events-auto bg-nexus-surface/80 backdrop-blur-2xl border border-nexus-border shadow-2xl transition-all duration-500 ease-out
+        ${showFullNav ? 'rounded-2xl px-2 py-2 max-w-fit' : 'rounded-full px-6 py-4 max-w-5xl w-full flex justify-between'}
+      `}>
         
-        {/* Logo Area */}
-        <div 
-          className="flex items-center gap-3 cursor-pointer group shrink-0 pl-2"
-          onClick={() => setView(showFullNav ? ViewState.DASHBOARD : ViewState.LANDING)}
-        >
-          <div className="relative flex items-center justify-center">
-             <div className="w-8 h-8 bg-white text-black rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-               <LineChart className="w-4 h-4" strokeWidth={3} />
-             </div>
-          </div>
-          <span className="text-sm font-bold tracking-tight text-white hidden sm:block">
-            NEXUS<span className="opacity-50 font-normal">PRO</span>
-          </span>
-        </div>
+        {/* Logo - Only show text when not in full nav mode (compact mode) */}
+        {!showFullNav && (
+            <div 
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => setView(ViewState.LANDING)}
+            >
+            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-black rounded-full"></div>
+            </div>
+            <span className="text-sm font-semibold tracking-tight text-white">Nexus Pro</span>
+            </div>
+        )}
 
         {/* Navigation Area */}
-        <div className="flex-1 flex items-center justify-end overflow-hidden">
+        <div className="flex items-center gap-1">
           {!showFullNav ? (
-            <div className="flex items-center gap-2 pr-2">
+            <div className="flex items-center gap-4">
                <button 
                 onClick={() => setView(ViewState.LOGIN)}
-                className="text-xs font-medium text-nexus-muted hover:text-white transition-colors px-3 py-2"
+                className="text-sm font-medium text-nexus-subtext hover:text-white transition-colors"
               >
-                Login
+                Log in
               </button>
               <button 
                 onClick={() => setView(ViewState.REGISTER)}
-                className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold hover:scale-105 transition-all shadow-lg"
+                className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-200 transition-colors"
               >
-                Começar
+                Get Started
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              
-              <NavButton 
+            <>
+              <NavIcon 
                 active={view === ViewState.DASHBOARD || view === ViewState.DETAIL} 
                 onClick={() => setView(ViewState.DASHBOARD)} 
                 icon={LayoutDashboard} 
-                label="Mercado" 
+                tooltip="Dashboard"
               />
-              
-              <NavButton 
+              <NavIcon 
                 active={view === ViewState.PORTFOLIO} 
                 onClick={() => setView(ViewState.PORTFOLIO)} 
                 icon={Wallet} 
-                label="Carteira" 
-                hideLabelMobile
+                tooltip="Portfolio"
               />
-              
-              <NavButton 
+              <NavIcon 
                 active={view === ViewState.AUTO_TRADE} 
                 onClick={() => setView(ViewState.AUTO_TRADE)} 
                 icon={Bot} 
-                label="AI Bot" 
-                hideLabelMobile
+                tooltip="AI Bot"
               />
-
-              <NavButton 
+              <NavIcon 
                 active={view === ViewState.ALERTS} 
                 onClick={() => setView(ViewState.ALERTS)} 
                 icon={Bell} 
-                label="Alertas" 
-                hideLabelMobile
+                tooltip="Alerts"
               />
               
-              <div className="h-4 w-px bg-white/10 mx-1 shrink-0"></div>
+              <div className="h-6 w-px bg-white/10 mx-2"></div>
               
-              <button 
-                onClick={() => setView(ViewState.SETTINGS)}
-                className={`p-2 rounded-full transition-all shrink-0 ${view === ViewState.SETTINGS ? 'bg-white text-black' : 'text-nexus-muted hover:text-white hover:bg-white/10'}`}
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-
-              <button 
+              <NavIcon 
+                active={view === ViewState.SETTINGS} 
+                onClick={() => setView(ViewState.SETTINGS)} 
+                icon={Settings} 
+                tooltip="Settings"
+              />
+               <button 
                 onClick={() => setView(ViewState.LANDING)}
-                className="p-2 rounded-full text-nexus-muted hover:text-red-400 hover:bg-white/5 transition-colors shrink-0"
+                className="p-3 rounded-xl text-nexus-subtext hover:text-nexus-danger hover:bg-nexus-surfaceHighlight transition-all"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5" />
               </button>
-            </div>
+            </>
           )}
         </div>
       </nav>
@@ -105,19 +97,18 @@ export const Navbar: React.FC<NavbarProps> = ({ view, setView, isSubscribed }) =
   );
 };
 
-// Subcomponent for Apple-style Pills
-const NavButton = ({ active, onClick, icon: Icon, label, hideLabelMobile }: any) => (
+const NavIcon = ({ active, onClick, icon: Icon }: any) => (
   <button 
     onClick={onClick}
     className={`
-      flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 shrink-0 text-xs font-medium
+      p-3 rounded-xl transition-all duration-300 relative group
       ${active 
-        ? 'bg-white/15 text-white backdrop-blur-md shadow-inner' 
-        : 'text-nexus-muted hover:text-white hover:bg-white/5'
+        ? 'bg-nexus-surfaceHighlight text-white shadow-inner' 
+        : 'text-nexus-subtext hover:text-white hover:bg-nexus-surfaceHighlight/50'
       }
     `}
   >
-    <Icon className={`w-4 h-4 ${active ? 'text-white' : ''}`} />
-    {label && <span className={`${hideLabelMobile ? 'hidden md:inline' : 'inline'}`}>{label}</span>}
+    <Icon className="w-5 h-5" />
+    {active && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"></span>}
   </button>
 );

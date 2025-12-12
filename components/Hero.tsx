@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState } from '../types';
-import { ChevronRight, ArrowRight, Zap, Shield, TrendingUp } from 'lucide-react';
+import { ChevronRight, Zap, Target, Lock, Activity, TrendingDown } from 'lucide-react';
 
 interface HeroProps {
   setView: (view: ViewState) => void;
@@ -8,87 +8,68 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ setView }) => {
   return (
-    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-nexus-bg">
       
-      {/* Dynamic Background Effects */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        {/* Animated Spotlight */}
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[80vw] h-[80vh] bg-blue-600/10 rounded-full blur-[120px] animate-spotlight opacity-50"></div>
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vh] bg-purple-600/5 rounded-full blur-[100px] animate-pulse-slow opacity-30"></div>
-        
-        {/* Subtle Grid - Perspective */}
-        <div 
-          className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]"
-          style={{ transform: 'perspective(1000px) rotateX(20deg) translateY(-50px) scale(1.5)', opacity: 0.4 }}
-        ></div>
-      </div>
+      {/* Background Ambience - The "Green Candle" glow */}
+      <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-nexus-primary/10 rounded-full blur-[150px] pointer-events-none opacity-60 animate-pulse-fast"></div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 text-center">
+      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
         
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-in-up" style={{animationDelay: '0s'}}>
-          <span className="w-2 h-2 rounded-full bg-nexus-success animate-pulse"></span>
-          <span className="text-[11px] font-medium tracking-wide uppercase text-nexus-muted">Nexus AI v3.0 Live</span>
+        {/* Status Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded bg-nexus-primary/10 border border-nexus-primary/20 cursor-default animate-in fade-in slide-in-from-top-4 duration-1000">
+          <span className="w-2 h-2 rounded-full bg-nexus-primary animate-pulse"></span>
+          <span className="text-[10px] font-mono font-bold text-nexus-primary uppercase tracking-widest">Setup Institucional: Online</span>
         </div>
         
-        {/* Main Title */}
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-white mb-6 animate-fade-in-up text-balance" style={{animationDelay: '0.1s'}}>
-          Financial <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">Clarity.</span>
+        {/* Headline - Visceral & Direct */}
+        <h1 className="text-5xl md:text-8xl font-extrabold tracking-tighter text-white mb-6 leading-[0.9] animate-in zoom-in duration-700">
+          PARE DE SER A<br/>
+          <span className="text-nexus-muted line-through decoration-nexus-danger decoration-4 opacity-50">LIQUIDEZ.</span> 
+          <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-nexus-primary to-emerald-300 text-glow">VIRE A BALEIA.</span>
         </h1>
         
-        {/* Subtitle */}
-        <p className="text-lg md:text-2xl text-nexus-muted font-light max-w-2xl mx-auto leading-relaxed mb-10 animate-fade-in-up text-balance" style={{animationDelay: '0.2s'}}>
-          Algoritmos institucionais simplificados.
-          <br className="hidden md:block"/> Análise on-chain, S2F e Machine Learning em uma única interface.
+        {/* Subtitle - The User's Strategy as the Hero */}
+        <p className="text-lg md:text-2xl text-nexus-muted font-medium max-w-3xl mx-auto leading-relaxed mb-10 text-balance animate-in fade-in delay-200">
+          O varejo opera notícias. Você opera a <span className="text-white border-b border-nexus-primary/50">Média de 8 Semanas</span> e o <span className="text-white border-b border-nexus-primary/50">Stock-to-Flow</span>.
+          <br/>A única ferramenta desenhada para proteger seu capital e multiplicar seu patrimônio.
         </p>
 
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 animate-in fade-in delay-300">
           <button 
             onClick={() => setView(ViewState.REGISTER)}
-            className="group relative px-8 py-4 bg-white text-black rounded-full font-medium text-lg overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+            className="group relative w-full sm:w-auto px-8 py-5 bg-nexus-primary text-black rounded font-bold text-lg hover:bg-emerald-400 transition-all shadow-[0_0_30px_rgba(0,255,148,0.3)] hover:shadow-[0_0_50px_rgba(0,255,148,0.5)] flex items-center justify-center gap-2 overflow-hidden"
           >
+            <div className="absolute inset-0 w-full h-full bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             <span className="relative z-10 flex items-center gap-2">
-              Começar Agora <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform"/>
+               ACESSAR O SETUP <Zap className="w-5 h-5 fill-current" />
             </span>
           </button>
           
           <button 
             onClick={() => setView(ViewState.LOGIN)}
-            className="px-8 py-4 rounded-full font-medium text-lg text-white border border-white/10 hover:bg-white/5 transition-all backdrop-blur-sm"
+            className="w-full sm:w-auto px-8 py-5 rounded border border-white/10 font-bold text-lg text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2"
           >
-            Acessar Demo
+            <Lock className="w-4 h-4 text-nexus-muted" /> Login
           </button>
         </div>
-      </div>
 
-      {/* Floating Features - Bento Style */}
-      <div className="max-w-6xl mx-auto px-6 mt-24 md:mt-32 grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in-up" style={{animationDelay: '0.5s'}}>
-         <FeatureCard 
-           icon={<TrendingUp className="w-6 h-6 text-nexus-accent" />}
-           title="SMA 8-Semanas"
-           desc="O padrão ouro para identificação de tendências de longo prazo em Bitcoin."
-         />
-         <FeatureCard 
-           icon={<Zap className="w-6 h-6 text-yellow-400" />}
-           title="Execução HFT"
-           desc="Motor de baixa latência para identificar anomalias de volume em milissegundos."
-         />
-         <FeatureCard 
-           icon={<Shield className="w-6 h-6 text-nexus-success" />}
-           title="Risco Assimétrico"
-           desc="Modelos matemáticos focados em proteção de capital e upside convexo."
-         />
+        {/* Social Proof / Stats - The "Hook" */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-8 animate-in fade-in delay-500">
+           <StatBox label="Precisão (Backtest)" value="89.4%" sub="Modelo S2F + Fibbo" />
+           <StatBox label="Sinais Hoje" value="12" sub="Acima da SMA 8W" color="text-nexus-primary" />
+           <StatBox label="Capital Protegido" value="$42M+" sub="Via Gestão de Risco" />
+           <StatBox label="Viés de Mercado" value="BULLISH" sub="Ciclo de Alta Confirmado" color="text-nexus-primary" />
+        </div>
       </div>
     </div>
   );
 };
 
-const FeatureCard = ({ icon, title, desc }: any) => (
-  <div className="group p-8 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-sm hover:bg-white/[0.04] hover:border-white/10 transition-all duration-500 hover:-translate-y-2 cursor-default">
-    <div className="mb-4 p-3 bg-white/5 rounded-2xl w-fit group-hover:scale-110 transition-transform duration-500">{icon}</div>
-    <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-    <p className="text-sm text-nexus-muted leading-relaxed">{desc}</p>
+const StatBox = ({ label, value, sub, color = "text-white" }: any) => (
+  <div className="text-center p-4 hover:bg-white/5 rounded transition-colors cursor-default">
+     <div className={`text-3xl md:text-4xl font-mono font-bold ${color} tracking-tighter mb-1`}>{value}</div>
+     <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-nexus-muted mb-1">{label}</div>
+     <div className="text-[10px] text-nexus-muted opacity-60 font-mono">{sub}</div>
   </div>
 );

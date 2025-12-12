@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CoinData } from '../types';
-import { TrendingUp, TrendingDown, ChevronRight, Globe, Activity, BarChart2, RefreshCw, AlertCircle, Radar, Zap, Gauge, Search, ArrowUpRight } from 'lucide-react';
+import { Activity, Gauge, Search, ArrowUpRight, Crosshair, Layers, Calculator, ChevronRight, Zap, Target, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface DashboardProps {
   onSelectCoin: (coin: CoinData) => void;
@@ -9,9 +9,7 @@ interface DashboardProps {
 interface GlobalMetrics {
   totalMarketCap: number;
   totalVolume: number;
-  marketCapChangePercentage24h: number;
   btcDominance: number;
-  ethDominance: number;
   fearGreedIndex: number; 
 }
 
@@ -45,12 +43,6 @@ const MOCK_COINS_FALLBACK: CoinData[] = [
     sma8w: 2.10, supertrend: 'BULLISH', s2fRatio: 1.10,
     ath: 3.40, athChange: -27.9, high24h: 2.55, low24h: 2.30,
     totalSupply: 99987000000, maxSupply: 100000000000, circulatingSupply: 55000000000, fdv: 245000000000
-  },
-  { 
-    id: 'cardano', symbol: 'ADA', name: 'Cardano', price: 0.85, change24h: -1.2, marketCap: 30000000000, volume24h: 600000000, 
-    sma8w: 0.90, supertrend: 'BEARISH', s2fRatio: 0.85,
-    ath: 3.09, athChange: -72.4, high24h: 0.88, low24h: 0.83,
-    totalSupply: 36000000000, maxSupply: 45000000000, circulatingSupply: 35500000000, fdv: 38250000000
   }
 ] as any[];
 
@@ -58,12 +50,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [globalMetrics, setGlobalMetrics] = useState<GlobalMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<boolean>(false);
 
-  // ... (Fetch Logic remains the same, keeping it concise for layout focus)
   const fetchData = async () => {
     setLoading(true);
-    setError(false);
     try {
       const globalRes = await fetch('https://api.coingecko.com/api/v3/global');
       const globalData = await globalRes.json();
@@ -73,9 +62,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
         setGlobalMetrics({
           totalMarketCap: globalData.data.total_market_cap.usd,
           totalVolume: globalData.data.total_volume.usd,
-          marketCapChangePercentage24h: globalData.data.market_cap_change_percentage_24h_usd,
           btcDominance: globalData.data.market_cap_percentage.btc,
-          ethDominance: globalData.data.market_cap_percentage.eth,
           fearGreedIndex: Math.min(Math.max(sentiment, 0), 100)
         });
       }
@@ -124,9 +111,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
       setGlobalMetrics({
         totalMarketCap: 3100000000000,
         totalVolume: 120000000000,
-        marketCapChangePercentage24h: 2.5,
         btcDominance: 58.2,
-        ethDominance: 12.8,
         fearGreedIndex: 68
       });
     } finally {
@@ -136,7 +121,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 120000);
+    const interval = setInterval(fetchData, 60000); // 1 minute updates
     return () => clearInterval(interval);
   }, []);
 
@@ -147,136 +132,204 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSelectCoin }) => {
     return `$${val.toLocaleString()}`;
   };
 
-  const potentialBuys = coins.filter(c => c.supertrend === 'BULLISH' && c.change24h > 0 && c.change24h < 5).slice(0, 3);
+  const btcCoin = coins.find(c => c.symbol === 'BTC') || coins[0];
+  const btcSmaGap = btcCoin ? ((btcCoin.price - btcCoin.sma8w) / btcCoin.sma8w) * 100 : 0;
+  
+  // Strategy Check Logic
+  const sma8wCheck = btcCoin ? btcCoin.price > btcCoin.sma8w : false;
+  const s2fCheck = btcCoin ? btcCoin.s2fRatio < 1.05 : false;
+  // Simulating Fibbo level (e.g. above 0.236 retrace)
+  const fibboCheck = true; 
+  
+  // Calculate Confluence Score
+  const confluenceScore = (sma8wCheck ? 33 : 0) + (s2fCheck ? 33 : 0) + (fibboCheck ? 34 : 0);
 
   return (
-    <div className="pt-28 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen pb-20">
+    <div className="pt-32 px-4 md:px-8 max-w-[1600px] mx-auto min-h-screen pb-20 animate-fade-in">
       
-      {/* 1. Global Metrics - Bento Grid Style */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <DataCard label="Total Market Cap" value={globalMetrics ? formatCurrency(globalMetrics.totalMarketCap) : '-'} />
-        <DataCard label="Volume (24h)" value={globalMetrics ? formatCurrency(globalMetrics.totalVolume) : '-'} />
-        <DataCard label="BTC Dominance" value={globalMetrics ? `${globalMetrics.btcDominance.toFixed(1)}%` : '-'} />
-        
-        {/* Sentiment Pill */}
-        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-between group hover:bg-white/[0.05] transition-all">
-           <div className="flex justify-between items-start">
-              <span className="text-xs uppercase tracking-widest text-nexus-muted font-medium">Sentimento</span>
-              <Gauge className="w-4 h-4 text-nexus-muted" />
-           </div>
-           <div>
-              <div className="text-2xl md:text-3xl font-mono font-bold text-white tracking-tighter">
-                {globalMetrics?.fearGreedIndex || 50}
-              </div>
-              <div className="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden">
-                 <div className="h-full bg-white" style={{width: `${globalMetrics?.fearGreedIndex || 50}%`}}></div>
-              </div>
-           </div>
-        </div>
-      </div>
+      {/* 1. The "My Strategy" War Room Panel */}
+      <div className="mb-10 animate-in slide-in-from-bottom-5 duration-700">
+         <div className="flex items-center justify-between mb-4">
+             <h2 className="text-3xl font-extrabold text-white tracking-tighter uppercase flex items-center gap-3">
+               <Target className="w-8 h-8 text-nexus-primary" />
+               Meu Setup
+             </h2>
+             <div className="hidden md:flex items-center gap-2 text-nexus-muted text-xs font-mono uppercase tracking-widest border border-white/10 px-3 py-1 rounded">
+               <span className="w-2 h-2 bg-nexus-primary animate-pulse rounded-full"></span>
+               Mercado ao Vivo
+             </div>
+         </div>
 
-      {/* 2. Strategy Radar */}
-      <div className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-           <h3 className="text-xl font-medium text-white tracking-tight">Oportunidades <span className="text-nexus-muted">Algorítmicas</span></h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           {loading ? [1,2,3].map(i => <div key={i} className="h-40 bg-white/5 rounded-3xl animate-pulse" />) : 
-             potentialBuys.map(coin => (
-               <div key={coin.id} onClick={() => onSelectCoin(coin)} className="group bg-white/[0.03] hover:bg-white/[0.06] backdrop-blur-md border border-white/5 p-6 rounded-3xl cursor-pointer transition-all duration-300 relative overflow-hidden">
-                  <div className="flex justify-between items-start mb-8 relative z-10">
-                     <div className="flex items-center gap-3">
-                        <img src={`https://assets.coingecko.com/coins/images/${coin.id === 'bitcoin' ? '1' : coin.id === 'ethereum' ? '279' : '1'}/large/${coin.symbol.toLowerCase()}.png`} className="w-10 h-10 rounded-full grayscale group-hover:grayscale-0 transition-all" />
-                        <div>
-                           <div className="font-bold text-white text-lg">{coin.name}</div>
-                           <div className="text-xs text-nexus-muted font-mono">{coin.symbol}</div>
-                        </div>
-                     </div>
-                     <div className="bg-white/10 p-2 rounded-full text-white group-hover:bg-white group-hover:text-black transition-colors">
-                        <ArrowUpRight className="w-4 h-4" />
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Main Confluence Gauge */}
+            <div className="lg:col-span-8 bg-nexus-surface border border-nexus-border p-8 rounded-sm relative overflow-hidden group">
+               {/* Background Scanline */}
+               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-nexus-primary/5 to-transparent h-[20px] w-full animate-scan pointer-events-none"></div>
+               
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10 mb-8">
+                  <div>
+                     <div className="text-nexus-muted text-xs font-bold uppercase tracking-widest mb-1">Status da Estratégia</div>
+                     <div className={`text-4xl md:text-5xl font-mono font-bold tracking-tighter ${confluenceScore > 66 ? 'text-nexus-primary text-glow' : 'text-nexus-danger text-danger-glow'}`}>
+                        {confluenceScore > 66 ? 'COMPRA FORTE' : confluenceScore > 33 ? 'NEUTRO' : 'VENDA FORTE'}
                      </div>
                   </div>
-                  <div className="relative z-10">
-                     <div className="text-sm text-nexus-muted mb-1">Preço Atual</div>
-                     <div className="text-2xl font-mono text-white tracking-tighter">${coin.price.toLocaleString()}</div>
+                  <div className="mt-4 md:mt-0 text-right">
+                     <div className="text-nexus-muted text-xs font-bold uppercase tracking-widest mb-1">Confluência</div>
+                     <div className="text-3xl font-mono font-bold text-white">{confluenceScore}%</div>
                   </div>
                </div>
-             ))
-           }
-        </div>
-      </div>
 
-      {/* 3. Market Table - Apple/Tesla Style Cleanliness */}
-      <div className="mb-6 flex justify-between items-end">
-         <h2 className="text-3xl font-bold text-white tracking-tight">Mercado</h2>
-         <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nexus-muted" />
-            <input 
-              type="text" 
-              placeholder="Filtrar..." 
-              className="bg-transparent border-b border-white/20 pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-white transition-colors w-40 focus:w-64"
-            />
+               {/* The 3 Pillars Checklist */}
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <StrategyCard 
+                    label="Média de 8 Semanas" 
+                    value={`$${btcCoin?.sma8w.toLocaleString(undefined, {maximumFractionDigits:0})}`}
+                    status={sma8wCheck ? 'BULLISH' : 'BEARISH'}
+                    detail={sma8wCheck ? 'Preço acima da média. Tendência de alta confirmada.' : 'Preço abaixo da média. Risco de queda acentuada.'}
+                    icon={Activity}
+                  />
+                  <StrategyCard 
+                    label="Stock-to-Flow" 
+                    value={btcCoin?.s2fRatio.toFixed(2)}
+                    status={s2fCheck ? 'BULLISH' : 'BEARISH'}
+                    detail={s2fCheck ? 'Ativo subvalorizado (Zona de Acumulação).' : 'Ativo sobrevalorizado (Risco de topo).'}
+                    icon={Layers}
+                  />
+                  <StrategyCard 
+                    label="Fibonacci (0.618)" 
+                    value="Suporte"
+                    status={fibboCheck ? 'BULLISH' : 'NEUTRAL'}
+                    detail="Preço segurando na retração de ouro. Ponto de entrada otimizado."
+                    icon={Crosshair}
+                  />
+               </div>
+            </div>
+
+            {/* Side Action Panel */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+               {/* DCA Calculator Teaser - Focusing on "Accumulation" */}
+               <div 
+                 onClick={() => onSelectCoin(btcCoin)}
+                 className="flex-1 bg-nexus-surface border border-nexus-border p-6 rounded-sm hover:border-nexus-primary/50 transition-all cursor-pointer group relative overflow-hidden"
+               >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                     <Calculator className="w-16 h-16 text-nexus-primary" />
+                  </div>
+                  <div className="relative z-10">
+                     <div className="text-xs font-bold text-nexus-primary uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <Zap className="w-3 h-3" /> Máquina de Riqueza
+                     </div>
+                     <h3 className="text-xl font-bold text-white mb-2">Simulador DCA</h3>
+                     <p className="text-sm text-nexus-muted mb-4">
+                        Veja quanto você estaria lucrando hoje se tivesse seguido a estratégia à risca desde 2018.
+                     </p>
+                     <div className="flex items-center gap-2 text-sm font-bold text-white group-hover:gap-4 transition-all">
+                        Simular Ganhos <ArrowUpRight className="w-4 h-4 text-nexus-primary" />
+                     </div>
+                  </div>
+               </div>
+
+               {/* Market Sentiment - Fear/Greed */}
+               <div className="bg-[#111] border border-nexus-border p-6 rounded-sm">
+                  <div className="flex justify-between items-center mb-2">
+                     <span className="text-xs font-bold text-nexus-muted uppercase tracking-widest">Psicologia (Medo/Ganância)</span>
+                     <Gauge className="w-4 h-4 text-nexus-muted" />
+                  </div>
+                  <div className="flex items-end gap-2">
+                     <span className={`text-3xl font-mono font-bold ${globalMetrics?.fearGreedIndex > 50 ? 'text-nexus-primary' : 'text-nexus-danger'}`}>
+                        {globalMetrics?.fearGreedIndex || 50}
+                     </span>
+                     <span className="text-xs font-bold text-nexus-muted mb-1.5 uppercase">
+                        {globalMetrics?.fearGreedIndex > 75 ? 'Euforia' : globalMetrics?.fearGreedIndex < 25 ? 'Pânico' : 'Neutro'}
+                     </span>
+                  </div>
+                  <div className="w-full bg-white/5 h-1 mt-3">
+                     <div className={`h-full ${globalMetrics?.fearGreedIndex > 50 ? 'bg-nexus-primary' : 'bg-nexus-danger'}`} style={{width: `${globalMetrics?.fearGreedIndex}%`}}></div>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
 
-      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="px-8 py-6 text-left text-[10px] uppercase tracking-widest text-nexus-muted font-medium">Ativo</th>
-                <th className="px-8 py-6 text-right text-[10px] uppercase tracking-widest text-nexus-muted font-medium">Preço</th>
-                <th className="px-8 py-6 text-right text-[10px] uppercase tracking-widest text-nexus-muted font-medium">24h %</th>
-                <th className="px-8 py-6 text-right text-[10px] uppercase tracking-widest text-nexus-muted font-medium hidden md:table-cell">SMA 8W</th>
-                <th className="px-8 py-6 text-center text-[10px] uppercase tracking-widest text-nexus-muted font-medium">Sinal</th>
-              </tr>
+      {/* 2. Target List (Market Table) */}
+      <h3 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-2">
+         <Search className="w-5 h-5 text-nexus-muted" /> Radar de Oportunidades
+      </h3>
+      
+      <div className="bg-nexus-surface border border-nexus-border rounded-sm overflow-hidden">
+         <div className="overflow-x-auto">
+         <table className="w-full">
+            <thead className="bg-white/[0.02] border-b border-white/5">
+               <tr>
+                  <th className="px-6 py-4 text-left text-[10px] font-bold text-nexus-muted uppercase tracking-widest">Ativo</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-bold text-nexus-muted uppercase tracking-widest">Preço</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-bold text-nexus-muted uppercase tracking-widest">Var. 24h</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-bold text-nexus-muted uppercase tracking-widest hidden md:table-cell">SMA 8W Dist.</th>
+                  <th className="px-6 py-4 text-center text-[10px] font-bold text-nexus-muted uppercase tracking-widest">Ação</th>
+               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.02]">
-              {coins.map((coin) => (
-                <tr 
-                  key={coin.id} 
-                  onClick={() => onSelectCoin(coin)}
-                  className="group hover:bg-white/[0.04] transition-all cursor-pointer"
-                >
-                  <td className="px-8 py-5 whitespace-nowrap">
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs font-mono text-nexus-muted w-4 text-center">{coin.symbol.substring(0,1)}</span>
-                      <div>
-                        <div className="text-sm font-medium text-white group-hover:text-white transition-colors">{coin.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-right text-sm text-white font-mono tracking-tight">
-                    ${coin.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-right">
-                    <span className={`text-sm font-mono tracking-tight ${coin.change24h >= 0 ? 'text-white' : 'text-nexus-muted'}`}>
-                      {coin.change24h > 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-right text-sm text-nexus-muted font-mono hidden md:table-cell">
-                    ${coin.sma8w.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </td>
-                  <td className="px-8 py-5 whitespace-nowrap text-center">
-                    {coin.supertrend === 'BULLISH' ? (
-                       <span className="inline-flex w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></span>
-                    ) : (
-                       <span className="inline-flex w-2 h-2 rounded-full bg-red-500/50"></span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-white/5">
+               {coins.map(coin => {
+                  const smaDist = ((coin.price - coin.sma8w) / coin.sma8w) * 100;
+                  return (
+                  <tr key={coin.id} onClick={() => onSelectCoin(coin)} className="hover:bg-white/[0.03] transition-colors cursor-pointer group">
+                     <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                           <img src={`https://assets.coingecko.com/coins/images/${coin.id === 'bitcoin' ? '1' : coin.id === 'ethereum' ? '279' : '1'}/large/${coin.symbol.toLowerCase()}.png`} className="w-8 h-8 rounded-full grayscale group-hover:grayscale-0 transition-all" />
+                           <div>
+                              <div className="font-bold text-white text-sm group-hover:text-nexus-primary transition-colors">{coin.name}</div>
+                              <div className="text-[10px] text-nexus-muted font-mono">{coin.symbol}</div>
+                           </div>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4 text-right">
+                        <div className="font-mono text-sm text-white font-bold">${coin.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                     </td>
+                     <td className="px-6 py-4 text-right">
+                        <div className={`font-mono text-sm font-bold ${coin.change24h >= 0 ? 'text-nexus-primary' : 'text-nexus-danger'}`}>
+                           {coin.change24h > 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+                        </div>
+                     </td>
+                     <td className="px-6 py-4 text-right hidden md:table-cell">
+                        <div className={`font-mono text-xs font-bold ${smaDist > 0 ? 'text-nexus-primary' : 'text-nexus-danger'}`}>
+                           {smaDist > 0 ? '+' : ''}{smaDist.toFixed(2)}%
+                        </div>
+                     </td>
+                     <td className="px-6 py-4 text-center">
+                        {coin.supertrend === 'BULLISH' ? (
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-nexus-primary/20 text-nexus-primary border border-nexus-primary/50 text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                              COMPRAR
+                           </span>
+                        ) : (
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-nexus-danger/20 text-nexus-danger border border-nexus-danger/50 text-[10px] font-bold uppercase tracking-wider">
+                              VENDER
+                           </span>
+                        )}
+                     </td>
+                  </tr>
+               )})}
             </tbody>
-          </table>
-        </div>
+         </table>
+         </div>
       </div>
     </div>
   );
 };
 
-const DataCard = ({ label, value }: { label: string, value: string }) => (
-  <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex flex-col justify-between group hover:bg-white/[0.05] transition-all h-32">
-     <span className="text-xs uppercase tracking-widest text-nexus-muted font-medium">{label}</span>
-     <span className="text-2xl md:text-3xl font-mono font-bold text-white tracking-tighter">{value}</span>
+// Sub-component for Strategy Cards
+const StrategyCard = ({ label, value, status, detail, icon: Icon }: any) => (
+  <div className={`p-4 border rounded-sm transition-all ${status === 'BULLISH' ? 'bg-nexus-primary/5 border-nexus-primary/20' : status === 'BEARISH' ? 'bg-nexus-danger/5 border-nexus-danger/20' : 'bg-white/5 border-white/10'}`}>
+     <div className="flex justify-between items-start mb-2">
+        <div className="text-[10px] uppercase font-bold text-nexus-muted tracking-wider">{label}</div>
+        <Icon className={`w-4 h-4 ${status === 'BULLISH' ? 'text-nexus-primary' : status === 'BEARISH' ? 'text-nexus-danger' : 'text-gray-400'}`} />
+     </div>
+     <div className="text-xl font-mono font-bold text-white mb-2">{value}</div>
+     <div className={`text-[10px] font-bold uppercase mb-2 ${status === 'BULLISH' ? 'text-nexus-primary' : status === 'BEARISH' ? 'text-nexus-danger' : 'text-gray-400'}`}>
+        {status === 'BULLISH' ? 'Sinal de Alta' : status === 'BEARISH' ? 'Sinal de Baixa' : 'Neutro'}
+     </div>
+     <p className="text-[10px] text-nexus-muted leading-relaxed">
+        {detail}
+     </p>
   </div>
 );

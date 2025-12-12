@@ -132,4 +132,6 @@ export interface ActivePosition {
   pnlUsd: number;
   pnlPercent: number;
   liquidationPrice: number;
+  takeProfit: number;
+  stopLoss: number;
 }
